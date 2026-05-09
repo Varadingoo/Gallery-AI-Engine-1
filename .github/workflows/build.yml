@@ -1,0 +1,39 @@
+name: Forge Android Vulkan Engine
+
+on: 
+  workflow_dispatch: # This creates a manual "Run" button
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04 # Pristine, predictable Linux environment
+
+    steps:
+      - name: 1. Clone the FOSS Engine
+        uses: actions/checkout@v4
+        with:
+          repository: 'leejet/stable-diffusion.cpp'
+          submodules: 'recursive'
+
+      - name: 2. Setup the Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26b
+
+      - name: 3. Install Vulkan SDK & Ninja
+        run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
+          sudo apt-get update
+          sudo apt-get install -y vulkan-sdk ninja-build
+
+      - name: 4. Compile the Engine
+        run: |
+          mkdir build && cd build
+          cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DGGML_VULKAN=ON -DSD_VULKAN=ON -DSD_BUILD_SHARED_LIB=ON -DSD_BUILD_EXAMPLES=OFF -DSD_BUILD_TESTS=OFF ..
+          ninja
+
+      - name: 5. Upload the Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Android-Vulkan-Engine
+          path: build/libstable-diffusion.so
