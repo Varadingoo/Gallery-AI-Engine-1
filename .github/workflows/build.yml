@@ -25,8 +25,9 @@ jobs:
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-jammy.list http://packages.lunarg.com/vulkan/lunarg-vulkan-jammy.list
           sudo apt-get update
           sudo apt-get install -y vulkan-sdk ninja-build
-          # 💥 THE FIX: Force-feed the C++ headers into the Android NDK's isolated sysroot!
+          # 💥 THE FIX: Force-feed BOTH the C++ headers AND the Video extensions into the NDK!
           sudo cp -r /usr/include/vulkan/* $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/vulkan/
+          sudo cp -r /usr/include/vk_video $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/
 
       - name: 4. Compile the Engine
         run: |
